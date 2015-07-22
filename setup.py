@@ -40,6 +40,10 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['Lasagne', 'theano', 'sklearn', 'numpy'],
     
+    dependency_links=[
+        'git+https://github.com/Lasagne/Lasagne.git#egg=Lasagne',
+    ],
+
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
