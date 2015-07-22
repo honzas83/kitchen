@@ -38,7 +38,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['Lasagne', 'theano', 'scikit-learn', 'numpy==1.6.2'],
+    install_requires=[ 'numpy==1.6.2', 'Lasagne', 'theano', 'scikit-learn'],
     
     dependency_links=[
         'git+https://github.com/Lasagne/Lasagne.git#egg=Lasagne-0.1',
