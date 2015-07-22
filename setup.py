@@ -41,7 +41,7 @@ setup(
     install_requires=['Lasagne', 'theano', 'sklearn', 'numpy'],
     
     dependency_links=[
-        'https://github.com/Lasagne/Lasagne.git#egg=Lasagne-0.1',
+        'git+https://github.com/Lasagne/Lasagne.git#egg=Lasagne-0.1',
     ],
 
 
