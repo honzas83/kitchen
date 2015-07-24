@@ -223,10 +223,6 @@ class CategoricalCrossentropy(object):
 
         return X, y
 
-    def get_Xy_dim(self, X, y):
-        X_dim, _ = super(CategoricalCrossentropy, self).get_Xy_dim(X, y)
-        y_dim = self.encoder_.n_values_[0]
-
     def create_loss(self, input_var, output_var):
         pred_train = lasagne.layers.get_output(self.output_layer_, input_var)
         loss_train = lasagne.objectives.categorical_crossentropy(pred_train, output_var)
