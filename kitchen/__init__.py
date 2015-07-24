@@ -14,6 +14,10 @@ import datetime as dt
 import itertools
 import inspect
 
+from . import init, layers
+
+__all__ = ['init', 'layers', 'text', 'utils']
+
 
 class Network(BaseEstimator, ClassifierMixin):
     def __init__(self, random_state=None, batch_size=128, n_epochs=5,
