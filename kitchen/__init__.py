@@ -8,6 +8,7 @@ import theano.tensor as T
 import theano
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
+from sklearn.preprocessing import OneHotEncoder
 from . import init 
 from . import layers as kitchen_layers
 import numpy as np
@@ -87,8 +88,7 @@ class Network(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         self.random_state_ = check_random_state(self.random_state)
 
-        if len(y.shape) == 1:
-            y = y[:, np.newaxis]
+        X, y = self._transform_Xy(X, y, fit=True)
 
         X_dim, y_dim = self.get_Xy_dim(X, y)
         self.input_layer_, self.output_layer_ = self.create_layers(X_dim, y_dim, self.random_state_)
@@ -153,8 +153,7 @@ class Network(BaseEstimator, ClassifierMixin):
                 break
 
     def loss(self, X, y):
-        if len(y.shape) == 1:
-            y = y[:, np.newaxis]
+        X, y = self._transform_Xy(X, y)
 
         total_loss = 0.
         total_examples = 0
@@ -183,6 +182,12 @@ class Network(BaseEstimator, ClassifierMixin):
     #    pass
 
 class BinaryCrossentropy(object):
+    def _transform_Xy(self, X, y, fit=False):
+        if len(y.shape) == 1:
+            y = y[:, np.newaxis]
+
+        return X, y
+
     def create_loss(self, input_var, output_var):
         pred_train = lasagne.layers.get_output(self.output_layer_, input_var)
         loss_train = lasagne.objectives.binary_crossentropy(pred_train, output_var)
@@ -206,6 +211,40 @@ class BinaryCrossentropy(object):
             ret = ret[:, :, np.newaxis]
             X0 = 1.-ret
             return np.dstack([X0, ret])
+
+
+class CategoricalCrossentropy(object):
+    def _transform_Xy(self, X, y, fit=False):
+        if fit:
+            self.encoder_ = OneHotEncoder(sparse=False).fit(y[:, np.newaxis])
+            self.classes_ = self.encoder_.active_features_
+
+        y = self.encoder_.transform(y[:, np.newaxis])
+
+        return X, y
+
+    def get_Xy_dim(self, X, y):
+        X_dim, _ = super(CategoricalCrossentropy, self).get_Xy_dim(X, y)
+        y_dim = self.encoder_.n_values_[0]
+
+    def create_loss(self, input_var, output_var):
+        pred_train = lasagne.layers.get_output(self.output_layer_, input_var)
+        loss_train = lasagne.objectives.categorical_crossentropy(pred_train, output_var)
+        loss_train = lasagne.objectives.aggregate(loss_train, mode='mean')
+
+        pred_test = lasagne.layers.get_output(self.output_layer_, input_var, deterministic=True)
+        loss_test = lasagne.objectives.categorical_crossentropy(pred_test, output_var)
+        loss_test = lasagne.objectives.aggregate(loss_test, mode='mean')
+
+        return loss_train, loss_test
+
+    def predict(self, X):
+        proba = self._predict_raw(X)
+        return self.classes_[np.argmax(proba, axis=1)]
+
+    def predict_proba(self, X):
+        return self._predict_raw(X)
+
 
 class ModifiedHuber(BinaryCrossentropy):
     def _loss_impl(self, predictions, target):
