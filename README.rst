@@ -16,6 +16,7 @@ Installing
 ----------
 
 Dependencies:
+
 * `numpy <https://github.com/numpy/numpy>`_
 * `Lasagne <https://github.com/Lasagne/Lasagne>`_
 * `Theano <https://github.com/Theano/Theano>`_
