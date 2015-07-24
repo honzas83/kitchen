@@ -14,7 +14,6 @@ def iter_ngram(seq, max_order, min_order=None, sent_start=None, sent_end=None):
     else:
         buffer = []
 
-
     last_countdown = None
     while True:
         if last_countdown is None:
@@ -42,12 +41,13 @@ def iter_ngram(seq, max_order, min_order=None, sent_start=None, sent_end=None):
                 continue
             yield buffer[-n:]
 
+
 def iter_ngram_pad(seq, max_order, min_order=None, sent_start=None, sent_end=None, padding=[]):
     if len(padding) < max_order-1:
         raise ValueError("padding must have at least %d items" % (max_order-1))
 
     offset = len(padding)-max_order
-    
+
     for ngram in iter_ngram(seq, max_order, min_order, sent_start, sent_end):
         n = len(ngram)
         yield ngram+padding[offset+n:]

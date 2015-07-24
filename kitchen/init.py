@@ -1,7 +1,8 @@
 import numpy as np
-import lasagne.init 
+import lasagne.init
 from lasagne.utils import floatX
 from sklearn.utils import check_random_state
+
 
 class Normal(lasagne.init.Normal):
     def __init__(self, random_state=None, *args, **kwargs):
@@ -11,11 +12,11 @@ class Normal(lasagne.init.Normal):
     def sample(self, shape):
         return floatX(self.random_state.normal(self.mean, self.std, size=shape))
 
+
 class Uniform(lasagne.init.Uniform):
     def __init__(self, random_state=None, *args, **kwargs):
         super(Uniform, self).__init__(*args, **kwargs)
         self.random_state = check_random_state(random_state)
-
 
     def sample(self, shape):
         return floatX(self.random_state.uniform(
@@ -51,6 +52,7 @@ class Glorot(lasagne.init.Initializer):
         std = self.gain * np.sqrt(2.0 / ((n1 + n2) * receptive_field_size))
         return self.initializer(random_state=self.random_state, std=std).sample(shape)
 
+
 class GlorotNormal(Glorot):
     def __init__(self, random_state=None, gain=1.0, c01b=False):
         super(GlorotNormal, self).__init__(Normal, random_state, gain, c01b)
@@ -59,5 +61,3 @@ class GlorotNormal(Glorot):
 class GlorotUniform(Glorot):
     def __init__(self, random_state=None, gain=1.0, c01b=False):
         super(GlorotUniform, self).__init__(Uniform, random_state, gain, c01b)
-
-

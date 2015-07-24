@@ -1,7 +1,6 @@
 '''Text and lattice processing layers
 '''
 import theano
-import theano.tensor as T
 import numpy as np
 import six
 import lasagne
@@ -12,9 +11,10 @@ from .utils import iter_ngram_pad
 from sklearn.base import BaseEstimator
 from sklearn.feature_extraction.text import VectorizerMixin
 
+
 def maxpool_grad_perform(bounds, input, maximums, out_mtx):
     z = np.zeros_like(input)
-    
+
     i0 = np.arange(z.shape[1])
 
     for idx in xrange(maximums.shape[0]):
@@ -23,39 +23,42 @@ def maxpool_grad_perform(bounds, input, maximums, out_mtx):
         z[m_row, i0] = o_val
     return z
 
+
 def maxpool_perform(bounds, z):
     a = np.zeros((bounds.shape[0], z.shape[1]), dtype=z.dtype)
     m = np.zeros((bounds.shape[0], z.shape[1]), dtype=bounds.dtype)
-    
+
     i0 = np.arange(z.shape[1])
-    
+
     for m_idx, (b0, b1) in enumerate(bounds):
         m[m_idx] = np.argmax(z[b0:b1], 0)+b0
         a[m_idx] = z[m[m_idx], i0]
     return a, m
 
+
 class MaxPoolGrad(theano.gof.Op):
     def make_node(self, ridxs, z, maximums, out_mtx):
         return theano.Apply(self, [ridxs, z, maximums, out_mtx], [z.type()])
-    
+
     def perform(self, node, inputs, output_storage):
         ridxs, z, maximums, out_mtx = inputs
         output_storage[0][0] = maxpool_grad_perform(ridxs, z, maximums, out_mtx)
-        
+
     def infer_shape(self, node, inputs):
         ridxs, z, maximums, out_mtx = inputs
         return [z]
 
 maxpool_grad = MaxPoolGrad()
 
+
 class MaxPool(theano.gof.Op):
     default_output = 0
-    
+
     def make_node(self, bounds, z):
         node = theano.Apply(self, [bounds, z], [z.type.make_variable(), bounds.type.make_variable()])
         self.maximums = node.outputs[1]
         return node
-    
+
     def perform(self, node, inputs, output_storage):
         bounds, z = inputs
         output_storage[0][0], output_storage[1][0] = maxpool_perform(bounds, z)
@@ -63,15 +66,14 @@ class MaxPool(theano.gof.Op):
     def infer_shape(self, node, inputs):
         bounds, z = inputs
         return [(bounds[0], z[1]), (bounds[0], z[1])]
-    
+
     def grad(self, inputs, output_gradients):
         bounds, z = inputs
         out_mtx, _ = output_gradients
         return [bounds*0.,
                 maxpool_grad(bounds, z, self.maximums, out_mtx),
                 ]
-     
-                    
+
 maxpool = MaxPool()
 
 
@@ -111,7 +113,7 @@ class PooledNetwork(Network):
             features_slc = features[bmin:bmax]
 
             if y is None:
-                yield bounds_slc-bmin, features_slc, 
+                yield bounds_slc-bmin, features_slc,
             else:
                 yield bounds_slc-bmin, features_slc, y[slc]
 
@@ -123,7 +125,7 @@ class PooledNetwork(Network):
 
 
 class PooledVectorizer(BaseEstimator, VectorizerMixin):
-    def __init__(self, max_order, min_order = None, input='content', encoding='utf-8',
+    def __init__(self, max_order, min_order=None, input='content', encoding='utf-8',
                  decode_error='strict', strip_accents=None,
                  lowercase=True, preprocessor=None, tokenizer=None,
                  stop_words=None, token_pattern=r"(?u)\b\w\w+\b",
@@ -163,7 +165,7 @@ class PooledVectorizer(BaseEstimator, VectorizerMixin):
         padding = []
         for i in range(1, self.max_order+1):
             key = '__padding-magic-%d' % i
-            vocabulary[key] # introduce the unique key into the vocabulary
+            vocabulary[key]  # introduce the unique key into the vocabulary
             padding.append(key)
 
         X = []
@@ -179,7 +181,7 @@ class PooledVectorizer(BaseEstimator, VectorizerMixin):
                     try:
                         vector.append(vocabulary[i])
                     except KeyError:
-                        vector.append(vocabulary['__padding-magic-%d'%k])
+                        vector.append(vocabulary['__padding-magic-%d' % k])
                 vdoc.append(vector)
                 idx += 1
             idx1 = idx
@@ -232,8 +234,7 @@ class PooledVectorizer(BaseEstimator, VectorizerMixin):
         # TfidfVectorizer.
         self._validate_vocabulary()
 
-        vocabulary, X, bounds = self._count_vocab(raw_documents,
-                                          self.fixed_vocabulary_)
+        vocabulary, X, bounds = self._count_vocab(raw_documents, self.fixed_vocabulary_)
 
         if not self.fixed_vocabulary_:
             self.vocabulary_ = vocabulary

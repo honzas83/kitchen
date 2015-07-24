@@ -9,8 +9,6 @@ import theano
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.preprocessing import OneHotEncoder
-from . import init 
-from . import layers as kitchen_layers
 import numpy as np
 import datetime as dt
 import itertools
@@ -18,7 +16,8 @@ import inspect
 
 
 class Network(BaseEstimator, ClassifierMixin):
-    def __init__(self, random_state=None, batch_size=128, n_epochs=5, epoch_callback=None, batch_callback=None, **kwargs):
+    def __init__(self, random_state=None, batch_size=128, n_epochs=5,
+                 epoch_callback=None, batch_callback=None, **kwargs):
         super(Network, self).__init__(**kwargs)
         self.random_state = random_state
         self.batch_size = batch_size
@@ -76,7 +75,7 @@ class Network(BaseEstimator, ClassifierMixin):
             slc = slice(idx*self.batch_size, (idx+1)*self.batch_size)
 
             if y is None:
-                yield X[slc], 
+                yield X[slc],
             else:
                 yield X[slc], y[slc]
 
@@ -125,7 +124,7 @@ class Network(BaseEstimator, ClassifierMixin):
 
                 stats = dict(
                     batch_train_loss=batch_train_loss,
-                    batch_num = batch_num,
+                    batch_num=batch_num,
                 )
 
                 if self.batch_callback:
@@ -137,10 +136,10 @@ class Network(BaseEstimator, ClassifierMixin):
 
             stats = dict(
                 avg_train_loss=avg_train_loss,
-                epoch = epoch,
-                t_start = t0,
-                t_epoch = t2-t1,
-                t_total = t2-t0,
+                epoch=epoch,
+                t_start=t0,
+                t_epoch=t2-t1,
+                t_total=t2-t0,
             )
 
             if self.epoch_callback:
@@ -168,18 +167,9 @@ class Network(BaseEstimator, ClassifierMixin):
         for batch_num, args in enumerate(self.iter_batches(X, None), 1):
             batch_predict = self._predict_func(*args)
             predictions.append(batch_predict)
-        
+
         return np.vstack(predictions)
 
-
-    #def create_layers(self, X_dim, y_dim, random_state):
-        #return []
-
-    #def create_updates(self, loss, params):
-        #pass
-
-    #def create_loss(self, input_var, output_var):
-    #    pass
 
 class BinaryCrossentropy(object):
     def _transform_Xy(self, X, y, fit=False):
@@ -250,7 +240,6 @@ class ModifiedHuber(BinaryCrossentropy):
 
         return T.switch(T.ge(z, 1.0), 0., T.switch(T.ge(z, -1.0), (1.0 - z)**2, -4.0 * y))
 
-        
     def create_loss(self, input_var, output_var):
         pred_train = lasagne.layers.get_output(self.output_layer_, input_var)
         loss_train = self._loss_impl(pred_train, output_var)
@@ -314,6 +303,7 @@ class SGDNesterovMomentum(object):
         updates = lasagne.updates.nesterov_momentum(loss, params, self.learning_rate, self.momentum)
         return updates
 
+
 class L2Regularization(object):
     def __init__(self, alpha=0.01, **kwargs):
         super(L2Regularization, self).__init__(**kwargs)
@@ -321,5 +311,3 @@ class L2Regularization(object):
 
     def create_regularization(self, output_layer):
         return self.alpha * lasagne.regularization.regularize_network_params(output_layer, lasagne.regularization.l2)
-
-
