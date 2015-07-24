@@ -1,9 +1,6 @@
 kitchen
 =======
 
-About
------
-
 Kitchen is a Python library for artificial neural network with interface compatible with `sklearn
 (scikit-learn) <http://scikit-learn.org>`_.  It is a glue code between `Lasagne
 <http://lasagne.readthedocs.org/en/latest/>`_ and `sklearn <scikit-learn.org>`_. The library is
