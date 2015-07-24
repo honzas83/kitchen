@@ -12,6 +12,7 @@ The library is attempts to comply with the `sklearn coding guidelines <http://sc
 * Handling of random numbers (consistent results between different runs of your code)
 * Support for sklearn ``get_params()`` and ``set_params()``
 * Pipeline compatibility
+* Pickle compatibility
 
 Installing
 ----------
