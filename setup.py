@@ -16,12 +16,12 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='20150722',
+    version='20150724',
 
     description='Kitchen library',
 
     # The project's main homepage.
-    url='...',
+    url='https://github.com/honzas83/kitchen'
 
     # Author details
     author=u'Jan Švec',

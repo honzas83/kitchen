@@ -15,9 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
-lib64/
-parts/
-sdist/
+lib64/ parts/ sdist/
 var/
 *.egg-info/
 .installed.cfg
@@ -55,3 +53,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# IPython notebook related stuff
+.ipynb_checkpoints
