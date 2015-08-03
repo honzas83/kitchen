@@ -21,7 +21,7 @@ setup(
     description='Kitchen library',
 
     # The project's main homepage.
-    url='https://github.com/honzas83/kitchen'
+    url='https://github.com/honzas83/kitchen',
 
     # Author details
     author=u'Jan Švec',
