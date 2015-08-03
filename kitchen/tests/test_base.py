@@ -1,8 +1,9 @@
 import kitchen
 import lasagne
 import numpy as np
-from sklearn.base import BaseEstimator, clone, is_classifier
+from sklearn.base import clone
 from sklearn.utils.testing import assert_equal, assert_array_almost_equal
+from copy import deepcopy
 
 
 class MyNetwork(kitchen.Network, kitchen.SGDNesterovMomentum, kitchen.BinaryCrossentropy):
@@ -34,6 +35,19 @@ def test_fit():
     net.fit(X, y)
     net.loss(X, y)
     y_pred = net.predict(X)
+
+def test_fit_copy():
+    X = np.array([[1, 2, 3], [4, 5, 6]])
+    y = np.array([[0], [1]])
+
+    net1 = MyNetwork(random_state=42)
+    net1.fit(X, y)
+    net1.loss(X, y)
+
+    net2 = deepcopy(net1)
+    y_pred = net2.predict(X)
+
+    assert_equal(net1.get_params(), net2.get_params())
 
 def test_fit_batch_size_1():
     X = np.array([[1, 2, 3], [4, 5, 6]])

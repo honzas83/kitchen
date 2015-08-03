@@ -29,6 +29,12 @@ class Network(BaseEstimator, ClassifierMixin):
         self.epoch_callback = epoch_callback
         self.batch_callback = batch_callback
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop('_test_func_val', None)
+        state.pop('_predict_func_val', None)
+        return state
+
     @classmethod
     def _get_param_names(self):
         """Get parameter names for the estimator"""
@@ -87,6 +93,33 @@ class Network(BaseEstimator, ClassifierMixin):
         X_dim = X.shape[1]
         y_dim = y.shape[1]
         return X_dim, y_dim
+    
+    def _compile_functions(self):
+        tX, var_X = self._get_inputs()
+
+        ty = T.matrix('y')
+
+        train_loss, test_loss = self.create_loss(var_X, ty)
+
+        self._test_func_val = theano.function(tX+[ty], test_loss, allow_input_downcast=True)
+        self._predict_func_val = theano.function(tX, lasagne.layers.get_output(self.output_layer_, var_X, deterministic=True), allow_input_downcast=True)
+
+        train_params = tX+[ty]
+
+        return train_params, train_loss
+    
+    @property
+    def _test_func(self):
+        if not hasattr(self, '_test_func_val'):
+            self._compile_functions()
+        return self._test_func_val
+
+    @property
+    def _predict_func(self):
+        if not hasattr(self, '_predict_func_val'):
+            self._compile_functions()
+        return self._predict_func_val
+
 
     def fit(self, X, y):
         self.random_state_ = check_random_state(self.random_state)
@@ -96,13 +129,9 @@ class Network(BaseEstimator, ClassifierMixin):
         X_dim, y_dim = self.get_Xy_dim(X, y)
         self.input_layer_, self.output_layer_ = self.create_layers(X_dim, y_dim, self.random_state_)
 
+        train_params, train_loss = self._compile_functions()
+
         num_samples = y_dim
-
-        tX, var_X = self._get_inputs()
-
-        ty = T.matrix('y')
-
-        train_loss, test_loss = self.create_loss(var_X, ty)
 
         try:
             train_loss = train_loss + 1./float(num_samples) * self.create_regularization(self.output_layer_)
@@ -113,9 +142,7 @@ class Network(BaseEstimator, ClassifierMixin):
 
         updates = self.create_updates(train_loss, all_params)
 
-        self._train_func = theano.function(tX+[ty], train_loss, updates=updates, allow_input_downcast=True)
-        self._test_func = theano.function(tX+[ty], test_loss, allow_input_downcast=True)
-        self._predict_func = theano.function(tX, lasagne.layers.get_output(self.output_layer_, var_X, deterministic=True), allow_input_downcast=True)
+        train_func = theano.function(train_params, train_loss, updates=updates, allow_input_downcast=True)
 
         t0 = dt.datetime.now()
         for epoch in itertools.count(1):
@@ -123,7 +150,7 @@ class Network(BaseEstimator, ClassifierMixin):
             batch_train_losses = []
 
             for batch_num, args in enumerate(self.iter_batches(X, y, shuffle=True), 1):
-                batch_train_loss = self._train_func(*args)
+                batch_train_loss = train_func(*args)
                 batch_train_losses.append(batch_train_loss)
 
                 stats = dict(
