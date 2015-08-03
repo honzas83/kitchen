@@ -15,6 +15,7 @@ The library is attempts to comply with the `sklearn coding guidelines
 * Support for sklearn ``get_params()`` and ``set_params()``
 * Pipeline compatibility
 * Pickle compatibility
+* Theano backend for CPU/GPGPU computing, Theano functions compiled on-demand
 
 Installing
 ----------
