@@ -93,7 +93,11 @@ class MaxpoolLayer(lasagne.layers.MergeLayer):
 
 class PooledNetwork(Network):
     def iter_batches(self, X, y, shuffle=False):
-        bounds, features = X
+        # For the PooledNetwork the first element of X is the pooling bounds
+        bounds = X[0]
+
+        # X could contain multiple features for other input layers
+        other_features = X[1:]
 
         batch_num = bounds.shape[0] // self.batch_size
         if batch_num == 0 or bounds.shape[0] % self.batch_size != 0:
@@ -110,12 +114,11 @@ class PooledNetwork(Network):
             bmin = bounds_slc.min()
             bmax = bounds_slc.max()
 
-            features_slc = features[bmin:bmax]
+            other_features_slc = tuple(ftr[bmin:bmax] for ftr in other_features)
 
-            if y is None:
-                yield bounds_slc-bmin, features_slc,
-            else:
-                yield bounds_slc-bmin, features_slc, y[slc]
+            y_slc = (y[slc],) if y is not None else ()
+
+            yield (bounds_slc-bmin,) + other_features_slc + y_slc
 
     def get_Xy_dim(self, X, y):
         bounds, features = X
