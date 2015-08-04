@@ -318,12 +318,19 @@ class ADADelta(object):
 
 
 class ADAM(object):
-    def __init__(self, learning_rate=1., **kwargs):
+    def __init__(self, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08, **kwargs):
         super(ADAM, self).__init__(**kwargs)
         self.learning_rate = learning_rate
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.epsilon = epsilon
 
     def create_updates(self, loss, params):
-        updates = lasagne.updates.adam(loss, params, self.learning_rate)
+        updates = lasagne.updates.adam(loss, params,
+                                       learning_rate=self.learning_rate,
+                                       beta1=self.beta1,
+                                       beta2=self.beta2,
+                                       epsilon=self.epsilon)
         return updates
 
 
