@@ -295,12 +295,14 @@ class RMSProp(object):
 
 
 class ADADelta(object):
-    def __init__(self, learning_rate=1., **kwargs):
+    def __init__(self, learning_rate=1., rho=0.95, epsilon=1e-6, **kwargs):
         super(ADADelta, self).__init__(**kwargs)
         self.learning_rate = learning_rate
+        self.rho = rho
+        self.epsilon = epsilon
 
     def create_updates(self, loss, params):
-        updates = lasagne.updates.adadelta(loss, params, self.learning_rate)
+        updates = lasagne.updates.adadelta(loss, params, self.learning_rate, self.rho, self.epsilon)
         return updates
 
 
