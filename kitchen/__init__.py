@@ -20,6 +20,17 @@ __all__ = ['init', 'layers', 'text', 'utils']
 
 
 class Network(BaseEstimator, ClassifierMixin):
+    '''Base class for all kitchen neural networks
+
+    Inherited from sklearn's BaseEstimator and ClassifierMixin.
+
+    Uses a simple interface following the sklearn rules:
+    
+    # Instantiate a `Network`
+    # Fit it with `fit()`
+    # Use it with `predict()`
+    '''
+
     def __init__(self, random_state=None, batch_size=128, n_epochs=5,
                  epoch_callback=None, batch_callback=None, **kwargs):
         super(Network, self).__init__(**kwargs)
