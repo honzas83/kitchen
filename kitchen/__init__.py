@@ -337,6 +337,15 @@ class SGDNesterovMomentum(object):
         return updates
 
 
+class L1Regularization(object):
+    def __init__(self, alpha=0.01, **kwargs):
+        super(L1Regularization, self).__init__(**kwargs)
+        self.alpha = alpha
+
+    def create_regularization(self, output_layer):
+        return self.alpha * lasagne.regularization.regularize_network_params(output_layer, lasagne.regularization.l1)
+
+
 class L2Regularization(object):
     def __init__(self, alpha=0.01, **kwargs):
         super(L2Regularization, self).__init__(**kwargs)
@@ -344,3 +353,15 @@ class L2Regularization(object):
 
     def create_regularization(self, output_layer):
         return self.alpha * lasagne.regularization.regularize_network_params(output_layer, lasagne.regularization.l2)
+
+
+class ElasticNetRegularization(object):
+    def __init__(self, alpha=0.01, l1_ratio=0.15, **kwargs):
+        super(ElasticNetRegularization, self).__init__(**kwargs)
+        self.alpha = alpha
+
+    def create_regularization(self, output_layer):
+        L1 = lasagne.regularization.regularize_network_params(output_layer, lasagne.regularization.l1)
+        L2 = lasagne.regularization.regularize_network_params(output_layer, lasagne.regularization.l2)
+
+        return self.alpha * (self.l1_ratio*L1+(1-self.l1_ratio)*L2)
