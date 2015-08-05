@@ -16,7 +16,7 @@ import inspect
 
 from . import init, layers
 
-__all__ = ['init', 'layers', 'text', 'utils']
+__all__ = ['init', 'layers', 'Network', 'BinaryCrossentropy', 'SGD']
 
 
 class Network(BaseEstimator, ClassifierMixin):
@@ -26,9 +26,9 @@ class Network(BaseEstimator, ClassifierMixin):
 
     Uses a simple interface following the sklearn rules:
     
-    # Instantiate a `Network`
-    # Fit it with `fit()`
-    # Use it with `predict()`
+    1. Instantiate a `Network`
+    2. Fit it with `fit()`
+    3. Use it with `predict()`
     '''
 
     def __init__(self, random_state=None, batch_size=128, n_epochs=5,
@@ -84,6 +84,27 @@ class Network(BaseEstimator, ClassifierMixin):
         return ret_list, ret_dict
 
     def iter_batches(self, X, y, shuffle=False):
+        '''Iterates over minibatches from `X` and `y`
+
+        Uses `self.batch_size` as a size of a minibatch. 
+
+        Parameters
+        ----------
+        X : array
+            The feature vector array after transformation using `_transform_Xy`
+
+        y : array
+            The target vector array after transformation using `_transform_Xy`
+
+        shuffle : bool, optional
+            `shuffle` is `True` if the method was called during the `fit`, for
+            prediction `suffle` is `False`
+
+        Yields
+        ------
+        tuple
+            Pair - minibatches from `X` and `y`
+        '''
         batch_num = X.shape[0] // self.batch_size
         if batch_num == 0 or X.shape[0] % self.batch_size != 0:
             batch_num += 1
@@ -101,6 +122,23 @@ class Network(BaseEstimator, ClassifierMixin):
                 yield X[slc], y[slc]
 
     def get_Xy_dim(self, X, y):
+        '''Returns the dimensions of the `X` and `y` arrays
+
+        Parameters
+        ----------
+        X : array
+            The feature vector array after transformation using `_transform_Xy`
+
+        y : array
+            The target vector array after transformation using `_transform_Xy`
+
+        Returns
+        -------
+        int, tuple
+            The dimensionality of `X`
+        int, tuple
+            The dimensionality of `y`
+        '''
         X_dim = X.shape[1]
         y_dim = y.shape[1]
         return X_dim, y_dim
@@ -131,8 +169,17 @@ class Network(BaseEstimator, ClassifierMixin):
             self._compile_functions()
         return self._predict_func_val
 
-
     def fit(self, X, y):
+        '''Train the network using the corresponding training algorithm
+
+        Parameters
+        ----------
+        X : array
+            Array of training feature vectors.
+
+        y : array
+            Targets for training
+        '''
         self.random_state_ = check_random_state(self.random_state)
 
         X, y = self._transform_Xy(X, y, fit=True)
@@ -194,6 +241,8 @@ class Network(BaseEstimator, ClassifierMixin):
                 break
 
     def loss(self, X, y):
+        '''Returns the test loss based on `X` and `y`
+        '''
         X, y = self._transform_Xy(X, y)
 
         total_loss = 0.
@@ -202,6 +251,7 @@ class Network(BaseEstimator, ClassifierMixin):
             num_examples = args[-1].shape[0]
             total_loss += self._test_func(*args) * num_examples
             total_examples += num_examples
+        # TODO: beware - objective, average (what if it is sum?)
         return total_loss / total_examples
 
     def _predict_raw(self, X):
@@ -214,6 +264,11 @@ class Network(BaseEstimator, ClassifierMixin):
 
 
 class BinaryCrossentropy(object):
+    '''Mixin for binary crossentropy crioterion
+
+    It is supposed, that the output layer of the neural network is a sigmoid
+    layer.
+    '''
     def _transform_Xy(self, X, y, fit=False):
         if len(y.shape) == 1:
             y = y[:, np.newaxis]
@@ -221,6 +276,17 @@ class BinaryCrossentropy(object):
         return X, y
 
     def create_loss(self, input_var, output_var):
+        '''Binary crossentropy
+
+        Uses `lasagne.objectives.binary_crossentropy`.
+
+        Returns
+        -------
+        loss_train: theano variable
+            Theano symbolic expression for training loss
+        loss_test: theano variable
+            Theano symbolic expression for testing loss
+        '''
         pred_train = lasagne.layers.get_output(self.output_layer_, input_var)
         loss_train = lasagne.objectives.binary_crossentropy(pred_train, output_var)
         loss_train = lasagne.objectives.aggregate(loss_train, mode='mean')
@@ -232,10 +298,34 @@ class BinaryCrossentropy(object):
         return loss_train, loss_test
 
     def predict(self, X):
+        '''Predicts the network outputs based on `X`
+
+        Parameters
+        ----------
+        X : array
+            Input feature vector
+
+        Returns
+        -------
+        array
+            Binary predictions based on threshold 0.5
+        '''
         ret = self._predict_raw(X)
         return (ret > 0.5).astype(int)
 
     def predict_proba(self, X):
+        '''Performs probabilistic predictions based on `X`
+
+        Parameters
+        ----------
+        X : array
+            Input feature vector
+
+        Returns
+        -------
+        array, shape (n_samples, 2) or (n_samples, n_outputs, 2)
+            Probabilistic predictions from sigmoids. Sum over the last axis is always 1.
+        '''
         ret = self._predict_raw(X)
         if len(ret.shape) == 1 or ret.shape[1] == 1:
             return np.hstack([1.-ret, ret])
