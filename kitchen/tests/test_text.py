@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score
 TEST_EPS = 1e-3
 
 def test_maxpool():
-    bounds = np.array([[0, 3], [3, 5], [5, 7]])
+    bounds = np.array([[0, 3], [3, 5], [5, 7], [7, 7], [7, 10]])
     X = np.random.randn(10, 3)
 
     W = np.random.randn(2, 3).T.astype(theano.config.floatX)
@@ -120,6 +120,21 @@ def test_poolednetwork():
     clsf.loss((bounds, X), y)
 
     clsf.predict((bounds, X))
+
+
+def test_poolednetwork2():
+    bounds = np.array([[0, 3], [3, 5], [5, 7], [7, 7], [7, 10]])
+    X = np.random.randn(10, 3)
+    y = np.array([0, 1, 0, 1, 0])
+
+    clsf = MyPooledNetwork()
+    clsf.fit((bounds, X), y)
+
+    clsf.loss((bounds, X), y)
+
+    clsf.predict((bounds, X))
+
+
 
 def test_vectorizer():
     text = ['foo bar baz foo']

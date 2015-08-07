@@ -20,6 +20,10 @@ def maxpool_grad_perform(bounds, input, maximums, out_mtx):
     for idx in xrange(maximums.shape[0]):
         o_val = out_mtx[idx]
         m_row = maximums[idx]
+        if m_row[0] == -1:
+            # Empty pooling region corresponds to argmax idx -1, see
+            # maxpool_perform
+            continue
         z[m_row, i0] = o_val
     return z
 
@@ -31,8 +35,12 @@ def maxpool_perform(bounds, z):
     i0 = np.arange(z.shape[1])
 
     for m_idx, (b0, b1) in enumerate(bounds):
-        m[m_idx] = np.argmax(z[b0:b1], 0)+b0
-        a[m_idx] = z[m[m_idx], i0]
+        if b0 == b1:
+            # Empty pooling region corresponds to argmax idx -1
+            m[m_idx] = -1
+        else:
+            m[m_idx] = np.argmax(z[b0:b1], 0)+b0
+            a[m_idx] = z[m[m_idx], i0]
     return a, m
 
 
