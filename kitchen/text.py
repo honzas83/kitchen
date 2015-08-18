@@ -35,12 +35,12 @@ def maxpool_perform(bounds, z):
     i0 = np.arange(z.shape[1])
 
     for m_idx, (b0, b1) in enumerate(bounds):
-        if b0 == b1:
-            # Empty pooling region corresponds to argmax idx -1
-            m[m_idx] = -1
-        else:
+        if b1 > b0:
             m[m_idx] = np.argmax(z[b0:b1], 0)+b0
             a[m_idx] = z[m[m_idx], i0]
+        else:
+            # Empty pooling region corresponds to argmax idx -1
+            m[m_idx] = -1
     return a, m
 
 
@@ -96,7 +96,9 @@ class MaxpoolLayer(lasagne.layers.MergeLayer):
         return ret
 
     def get_output_for(self, inputs, **kwargs):
-        return maxpool(inputs[0], inputs[1])
+        # For each MaxpoolLayer create a new MaxPool() object since MaxPool
+        # instances keep their internal state (arg max)
+        return MaxPool()(inputs[0], inputs[1])
 
 
 class PooledNetwork(Network):
